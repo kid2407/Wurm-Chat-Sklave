@@ -2,5 +2,8 @@
     "wurm_path": "/path/to/wurm/client",
     "playername": "yourusername",
     "token": "yourbottoken",
-    "channel_id": "channel-id"
+    "channels": {
+        "village": "your-channel-id",
+        "trade": "your-channel-id"
+    }
 }
