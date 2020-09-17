@@ -41,8 +41,9 @@ def send_latest_messages_to_discord(name: str):
         for message in message_list:
             message = message.strip()
             if len(message) > 0 and message.startswith("["):
-                channel: TextChannel = client.get_channel(_config["channels"][name])
-                asyncio.run_coroutine_threadsafe(channel.send(content=message), client.loop)
+                for singlechannel in _config["channels"][name]:
+                    channel: TextChannel = client.get_channel(singlechannel)
+                    asyncio.run_coroutine_threadsafe(channel.send(content=message), client.loop)
     _config["linecount"][name] = newcount
 
 
@@ -57,19 +58,20 @@ def tail_newest_log(name: str):
     filename = date.today().strftime(name.capitalize() + ".%Y-%m.txt")
     filepath = _config["wurm_path"] + "players/" + _config["playername"] + "/logs/" + filename
     if os.path.isfile(filepath):
-        if client.get_channel(_config["channels"][name]):
-            print(f"Datei {filepath} geladen.")
-            if "file_path" not in _config:
-                _config["file_path"] = {}
-            if "linecount" not in _config:
-                _config["linecount"] = {}
-            _config["file_path"][name] = filepath
-            _config["linecount"][name] = get_line_count_of_file(name)
-            observer = Observer()
-            observer.schedule(event_handler=MyHandler(name), path=filepath)
-            observer.start()
-        else:
-            print(f"Konnte den Kanal mit der Id {_config['channels'][name]} nicht finden.")
+        for channel in _config["channels"][name]:
+            if client.get_channel(channel):
+                print(f"Datei {filepath} geladen.")
+                if "file_path" not in _config:
+                    _config["file_path"] = {}
+                if "linecount" not in _config:
+                    _config["linecount"] = {}
+                _config["file_path"][name] = filepath
+                _config["linecount"][name] = get_line_count_of_file(name)
+                observer = Observer()
+                observer.schedule(event_handler=MyHandler(name), path=filepath)
+                observer.start()
+            else:
+                print(f"Konnte den Kanal mit der Id {_config['channels'][name]} nicht finden.")
     else:
         print(f"Datei {filepath} nicht gefunden :/")
 
