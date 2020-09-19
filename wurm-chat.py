@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import subprocess
+import sys
 from datetime import date
 from shutil import copyfile
 
@@ -65,11 +66,12 @@ def tail_newest_log(name: str):
                     _config["file_path"] = {}
                 if "linecount" not in _config:
                     _config["linecount"] = {}
-                _config["file_path"][name] = filepath
-                _config["linecount"][name] = get_line_count_of_file(name)
-                observer = Observer()
-                observer.schedule(event_handler=MyHandler(name), path=filepath)
-                observer.start()
+                if name not in _config["file_path"]:
+                    _config["file_path"][name] = filepath
+                    _config["linecount"][name] = get_line_count_of_file(name)
+                    observer = Observer()
+                    observer.schedule(event_handler=MyHandler(name), path=filepath)
+                    observer.start()
             else:
                 print(f"Konnte den Kanal mit der Id {_config['channels'][name]} nicht finden.")
     else:
@@ -77,13 +79,15 @@ def tail_newest_log(name: str):
 
 
 def load_config():
-    if not os.path.isfile("config.json"):
+    base_path = os.path.dirname(os.path.realpath(sys.argv[0])) + os.path.sep
+
+    if not os.path.isfile(base_path + "config.json"):
         copyfile("config.json.example", "config.json")
 
-    if not os.path.isfile("config.json"):
+    if not os.path.isfile(base_path + "config.json"):
         raise Exception("config.json konnte nicht gefunden werden.")
 
-    with open("config.json") as config_file:
+    with open(base_path + "config.json") as config_file:
         global _config
         _config = json.load(config_file)
 
