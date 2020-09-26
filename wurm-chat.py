@@ -5,8 +5,9 @@ import subprocess
 import sys
 from datetime import date
 from shutil import copyfile
+from typing import List
 
-from discord import Client, TextChannel
+from discord import Client, TextChannel, Member, AllowedMentions
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from watchdog.observers import Observer
 
@@ -44,7 +45,22 @@ def send_latest_messages_to_discord(name: str):
             if len(message) > 0 and message.startswith("["):
                 for singlechannel in _config["channels"][name]:
                     channel: TextChannel = client.get_channel(singlechannel)
-                    asyncio.run_coroutine_threadsafe(channel.send(content=message), client.loop)
+                    mention_index = message.find("@")
+                    if not mention_index == -1:
+                        space_index = message.find(" ", mention_index)
+                        if not space_index == -1:
+                            mention_end_index = space_index
+                        else:
+                            mention_end_index = len(message)
+                        if mention_end_index - mention_index + 1 > 3:
+                            mention_match: str = message[mention_index + 1:mention_end_index]
+                            users: List[Member] = channel.guild.members
+                            for user in users:
+                                if not user.display_name.lower().find(mention_match.lower()) == -1:
+                                    mention_string: str = user.mention
+                                    message = message.replace("@" + mention_match, mention_string)
+                                    break
+                    asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True)), client.loop)
     _config["linecount"][name] = newcount
 
 
