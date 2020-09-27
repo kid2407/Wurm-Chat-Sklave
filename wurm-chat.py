@@ -7,7 +7,7 @@ from datetime import date
 from shutil import copyfile
 from typing import List
 
-from discord import Client, TextChannel, Member, AllowedMentions
+from discord import Client, TextChannel, Member, AllowedMentions, Guild, Role
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from watchdog.observers import Observer
 
@@ -45,6 +45,7 @@ def send_latest_messages_to_discord(name: str):
             if len(message) > 0 and message.startswith("["):
                 for singlechannel in _config["channels"][name]:
                     channel: TextChannel = client.get_channel(singlechannel)
+                    guild: Guild = channel.guild
                     mention_index = message.find("@")
                     if not mention_index == -1:
                         space_index = message.find(" ", mention_index)
@@ -60,7 +61,20 @@ def send_latest_messages_to_discord(name: str):
                                     mention_string: str = user.mention
                                     message = message.replace("@" + mention_match, mention_string)
                                     break
-                    asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True)), client.loop)
+                    if name == "_event":
+                        roles_to_mention = []
+                        for keyword in _config["events"]:
+                            if not message.lower().find(keyword.lower()) == -1:
+                                role_mention: Role = guild.get_role(_config["events"][keyword])
+                                if role_mention is not None:
+                                    if role_mention.id not in roles_to_mention:
+                                        roles_to_mention.append(role_mention.id)
+                        if len(roles_to_mention) > 0:
+                            for single_role_id in roles_to_mention:
+                                message = guild.get_role(single_role_id).mention + " " + message
+                            asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
+                    else:
+                        asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
     _config["linecount"][name] = newcount
 
 
@@ -72,7 +86,10 @@ async def on_ready():
 
 
 def tail_newest_log(name: str):
-    filename = date.today().strftime(name.capitalize() + ".%Y-%m.txt")
+    if name.startswith("_"):
+        filename = date.today().strftime("_" + name[1:].capitalize() + ".%Y-%m.txt")
+    else:
+        filename = date.today().strftime(name.capitalize() + ".%Y-%m.txt")
     filepath = _config["wurm_path"] + "players/" + _config["playername"] + "/logs/" + filename
     if os.path.isfile(filepath):
         for channel in _config["channels"][name]:

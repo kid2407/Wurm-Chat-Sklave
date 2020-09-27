@@ -3,7 +3,20 @@
     "playername": "yourusername",
     "token": "yourbottoken",
     "channels": {
-        "village": "your-channel-id",
-        "trade": "your-channel-id"
+        "village": [
+            "your-channel-id"
+        ],
+        "trade": [
+            "your-channel-id"
+        ],
+        "alliance": [
+            "your-channel-id"
+        ],
+        "_event": [
+            "your-channel-id"
+        ]
+    },
+    "events": {
+        "keyword": "your-role-id"
     }
 }
