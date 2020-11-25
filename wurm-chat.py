@@ -70,9 +70,12 @@ def send_latest_messages_to_discord(name: str):
                                     if role_mention.id not in roles_to_mention:
                                         roles_to_mention.append(role_mention.id)
                         if len(roles_to_mention) > 0:
-                            for single_role_id in roles_to_mention:
-                                message = guild.get_role(single_role_id).mention + " " + message
-                            asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
+                            for blacklisted_word in _config["event_blacklist"]:
+                                if message.find(blacklisted_word) > -1:
+                                    return
+                                for single_role_id in roles_to_mention:
+                                    message = guild.get_role(single_role_id).mention + " " + message
+                                asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
                     else:
                         asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
     _config["linecount"][name] = newcount
@@ -87,9 +90,9 @@ async def on_ready():
 
 def tail_newest_log(name: str):
     if name.startswith("_"):
-        filename = date.today().strftime("_" + name[1:].capitalize() + ".%Y-%m.txt")
+        filename = date.today().strftime("_" + name[1:].capitalize() + ".%Y-%m-%d.txt")
     else:
-        filename = date.today().strftime(name.capitalize() + ".%Y-%m.txt")
+        filename = date.today().strftime(name.capitalize() + ".%Y-%m-%d.txt")
     filepath = _config["wurm_path"] + "players/" + _config["playername"] + "/logs/" + filename
     if os.path.isfile(filepath):
         for channel in _config["channels"][name]:

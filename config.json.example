@@ -18,5 +18,8 @@
     },
     "events": {
         "keyword": "your-role-id"
-    }
+    },
+    "event_blacklist": [
+        "blacklisted-word"
+    ]
 }
