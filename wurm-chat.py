@@ -69,13 +69,15 @@ def send_latest_messages_to_discord(name: str):
                                 if role_mention is not None:
                                     if role_mention.id not in roles_to_mention:
                                         roles_to_mention.append(role_mention.id)
+                                else:
+                                    print(f'Konnte keine role-mention finden für keyword "{keyword}" und roleid "{_config["events"][keyword]}"')
                         if len(roles_to_mention) > 0:
                             for blacklisted_word in _config["event_blacklist"]:
                                 if message.find(blacklisted_word) > -1:
                                     return
                                 for single_role_id in roles_to_mention:
                                     message = guild.get_role(single_role_id).mention + " " + message
-                                asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
+                            asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
                     else:
                         asyncio.run_coroutine_threadsafe(channel.send(content=message, allowed_mentions=AllowedMentions(users=True, roles=True)), client.loop)
     _config["linecount"][name] = newcount
