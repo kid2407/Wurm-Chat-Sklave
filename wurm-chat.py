@@ -114,6 +114,8 @@ def tail_newest_log(name: str):
                 print(f"Konnte den Kanal mit der Id {_config['channels'][name]} nicht finden.")
     else:
         print(f"Datei {filepath} nicht gefunden :/")
+        open(filepath, 'a').close()
+        tail_newest_log(name=name)
 
 
 def load_config():
